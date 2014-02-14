@@ -83,16 +83,17 @@ public class MainActivity extends Activity {
 		onClickConnect(null);
 		
 		((EditText)findViewById(R.id.edit_filename)).addTextChangedListener(onTextChanged);
-	}
-	@Override 
-	protected void onStart() {
-		super.onStart();
-	    log.append("onStart!\n");
+		
 	    initWriter();
 		scheduleTaskExecutor= Executors.newScheduledThreadPool(5);
 	    scheduleTaskExecutor.scheduleAtFixedRate(saver, 0, 1, TimeUnit.SECONDS);
 	    scheduleTaskExecutor.scheduleAtFixedRate(simulator, 0, 1, TimeUnit.SECONDS);
 	    scheduleTaskExecutor.scheduleAtFixedRate(guiupdater, 0, 100, TimeUnit.MILLISECONDS);
+	}
+	@Override 
+	protected void onStart() {
+		super.onStart();
+	    log.append("onStart!\n");
 	}
 	@Override
 	protected void onResume() {
@@ -253,8 +254,20 @@ public class MainActivity extends Activity {
 		public void run() {
 			runOnUiThread(new Runnable() {
 				public void run() {
-					int n = measures.size();
-					view_data.setText("Data length: "+n+", in write buffer: "+(n - binpointer)+", recording: "+recording+", simulating:"+simulating);
+					int span = 0;
+					int n = 0;
+					synchronized(measures_lock) {
+						n = measures.size();
+						if (n > 0) {
+							Triple first = measures.get(0);
+							Triple last = measures.get(n-1);
+							span = (int)(last.time - first.time);
+						}
+					}
+					int min = span / 60000;
+					float sec = (span - min) / 1000;
+					String info = String.format("#measures: %d, in write buffer: %d, spanning time: %d'%.1f\"",n, n - binpointer,min,sec);
+					view_data.setText(info);
 				}
 			});
 		}
