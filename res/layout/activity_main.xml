@@ -28,7 +28,7 @@
             android:text="@string/button_connect" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/button_disconnect"
             style="@style/AppBaseTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -63,13 +63,12 @@
 
         <Button
             android:id="@+id/button_cue"
-            style="?android:attr/buttonStyleSmall"
+            style="@style/AppBaseTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="onClickCue"
             android:text="@string/button_cue" />
-
     </LinearLayout>
 
     <Space
@@ -89,72 +88,94 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/title_log"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <ScrollView
-        android:id="@+id/scrollView1"
+    <TabHost
+        android:id="@android:id/tabhost"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" >
+        android:layout_height="match_parent" >
 
-        <TextView
-            android:id="@+id/view_log"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="TextView" />
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
 
-    </ScrollView>
+            <TabWidget
+                android:id="@android:id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+            </TabWidget>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+            <FrameLayout
+                android:id="@android:id/tabcontent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
 
-        <Button
-            android:id="@+id/button4"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="onClickDateName"
-            android:text="@string/button_namefiledate" />
+					<ScrollView
+					    android:id="@+id/tab_log"
+					    android:layout_width="fill_parent"
+					    android:layout_height="fill_parent" >
 
-    </LinearLayout>
+                        <TextView
+                            android:id="@+id/view_log"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="TextView" />
+                    </ScrollView>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <EditText
-            android:id="@+id/edit_filename"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="@string/edit_message" >
-
-            <requestFocus />
-        </EditText>
-
-        <Button
-            android:id="@+id/button_save"
+                <LinearLayout
+                    android:id="@+id/tab_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" >
+					<Button
+            android:id="@+id/button_updatechart"
+            style="@style/AppBaseTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:enabled="false"
-            android:onClick="onClickSave"
-            android:text="@string/button_save" />
-    </LinearLayout>
+            android:onClick="onClickUpdateChart"
+            android:text="@string/button_updatechart" />
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/tab_save"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" >
 
-</LinearLayout>
+            <Button
+                android:id="@+id/button_namefiledate"
+                style="@style/AppBaseTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:onClick="onClickDateName"
+                android:text="@string/button_namefiledate" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <EditText
+                android:id="@+id/edit_filename"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="@string/edit_message" />
+
+            <Button
+                android:id="@+id/button_save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:enabled="false"
+                android:onClick="onClickSave"
+                android:text="@string/button_save" />
+    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </TabHost>
 
 </LinearLayout>

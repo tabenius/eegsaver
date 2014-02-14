@@ -14,9 +14,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -24,14 +22,22 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TabHost;
+import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.LineGraphView;
 import com.neurosky.thinkgear.TGDevice;
 import com.neurosky.thinkgear.TGEegPower;
 import com.neurosky.thinkgear.TGRawMulti;
@@ -59,6 +65,9 @@ public class MainActivity extends Activity {
 	public static ArrayList<Triple> measures;
 	private static Object measures_lock;
 	private static ToggleButton rectog;
+	private TabHost mTabHost;
+	private GraphView graphView;
+	private GraphViewSeries graphViewSeries;
 
 	public MainActivity() {
 		super();
@@ -83,6 +92,23 @@ public class MainActivity extends Activity {
 		onClickConnect(null);
 		
 		((EditText)findViewById(R.id.edit_filename)).addTextChangedListener(onTextChanged);
+		
+		mTabHost = (TabHost) findViewById(android.R.id.tabhost);
+		mTabHost.setup();
+
+		TabSpec tab_log = mTabHost.newTabSpec("Log");
+		tab_log.setIndicator("Log");
+		tab_log.setContent(R.id.tab_log);
+		TabSpec tab_chart = mTabHost.newTabSpec("Chart");
+		tab_chart.setIndicator("Chart");
+		tab_chart.setContent(R.id.tab_chart);
+		TabSpec tab_save = mTabHost.newTabSpec("Save");
+		tab_save.setIndicator("Save");
+		tab_save.setContent(R.id.tab_save);
+
+		mTabHost.addTab(tab_log);
+		mTabHost.addTab(tab_chart);
+		mTabHost.addTab(tab_save);
 		
 	    initWriter();
 		scheduleTaskExecutor= Executors.newScheduledThreadPool(5);
@@ -134,6 +160,38 @@ public class MainActivity extends Activity {
 		}
 	}
 
+	public void onClickUpdateChart(View view) {
+		Triple[] data;
+		Triple first;
+		int n=0;
+		synchronized(measures_lock) {
+			int N = measures.size();
+			if (N==0) return;
+			first = measures.get(0);
+			for (int i=0; i < N; ++i) {
+				if (measures.get(i).type == Triple.Type.RAW) { n ++; }
+			}
+			data = new Triple[n];
+			int j=0;
+			for (int i=0; i < N; ++i) {
+				Triple t = measures.get(i);
+				if (t.type == Triple.Type.RAW) {
+					data[j++] = t; 
+				}
+			}
+		}
+		LinearLayout layout = (LinearLayout) findViewById(R.id.tab_chart);
+		if (graphView != null) {
+			graphViewSeries.resetData(data);
+		} else {
+			graphView = new LineGraphView(this, "EEG Raw Data");
+			graphViewSeries = new GraphViewSeries(data);
+			graphView.addSeries(graphViewSeries);
+			graphView.setScalable(true);
+			graphView.setScrollable(true);
+			layout.addView(graphView);
+		}
+	}
 	public void onClickConnect(View view) {
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
@@ -143,7 +201,7 @@ public class MainActivity extends Activity {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
-        	tgDevice = new TGDevice(bluetoothAdapter, handler);
+        	tgDevice = new TGDevice(bluetoothAdapter, eeghandler);
         	tgDevice.connect(true);
 		}
 	}
@@ -231,7 +289,7 @@ public class MainActivity extends Activity {
 			long ti = System.currentTimeMillis();
 			for(int i=0; i < freq; i = i + 1) {
 				double amp = Math.sin(((double)i)*2*Math.PI/((double)freq));
-				measures.add(new Triple(ti,Triple.Type.RAW,(int)(100*amp)));
+				measures.add(new Triple(ti+i,Triple.Type.RAW,(int)(100*amp)));
 			}
 		}
 	},"simulator");
@@ -282,7 +340,7 @@ public class MainActivity extends Activity {
         	((Button)findViewById(R.id.button_save)).setEnabled(s.length() > 0);
         }
     };
-	static private final Handler handler = new Handler() {
+	static private final Handler eeghandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
         	TextView tv = log;

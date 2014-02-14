@@ -18,4 +18,6 @@
     <string name="title_progress">Uploading to Dropbox</string>
     
     <string name="link_button">Link to Dropbox</string>
+    <string name="tab_log">Log</string>
+    <string name="button_updatechart">Update Chart</string>
 </resources>
