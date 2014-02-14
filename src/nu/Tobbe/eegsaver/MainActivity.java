@@ -1,5 +1,10 @@
 package nu.Tobbe.eegsaver;
 
+/*
+ * FIXME: Select data source in chart, raw or alpha etc
+ * 
+ */
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,6 +33,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
@@ -36,6 +42,7 @@ import android.widget.ToggleButton;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.LineGraphView;
 import com.neurosky.thinkgear.TGDevice;
@@ -50,25 +57,27 @@ public class MainActivity extends Activity {
 	public static final String MESSAGE_FILEIN = "nu.Tobbe.eeegsaver.FILENAMEIN";
 
 	BluetoothAdapter bluetoothAdapter;
-	static TextView log;
-	static TextView view_data;
 	static TGDevice tgDevice;
+	
 	final boolean rawEnabled = false;
 	boolean simulating = false;
 	static boolean recording = false;
 	static boolean verbose = false;
 	private String filenamein;
-	
-	public int binpointer = 0;
-	private int cue = 0;
-    public static BufferedWriter out;
-	public static ArrayList<Triple> measures;
+	private int binpointer = 0;
+	private int cuenr = 0;
+    private static BufferedWriter out;
+	private static ArrayList<Triple> measures;
 	private static Object measures_lock;
+	
+	private static TextView log;
+	private static TextView view_data;
 	private static ToggleButton rectog;
 	private TabHost mTabHost;
 	private GraphView graphView;
 	private GraphViewSeries graphViewSeries;
-
+	private int chartmode = 0;
+	
 	public MainActivity() {
 		super();
 		measures = new ArrayList<Triple>();
@@ -126,7 +135,6 @@ public class MainActivity extends Activity {
 	    super.onResume();
 	    log.append("onResume!\n");
 	}
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -159,9 +167,10 @@ public class MainActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
-
 	public void onClickUpdateChart(View view) {
-		Triple[] data;
+		GraphViewData[] data;
+		Triple[] data1;
+		GraphViewData[] data2;
 		Triple first;
 		int n=0;
 		synchronized(measures_lock) {
@@ -171,19 +180,40 @@ public class MainActivity extends Activity {
 			for (int i=0; i < N; ++i) {
 				if (measures.get(i).type == Triple.Type.RAW) { n ++; }
 			}
-			data = new Triple[n];
+			data1 = new Triple[n];
 			int j=0;
 			for (int i=0; i < N; ++i) {
 				Triple t = measures.get(i);
 				if (t.type == Triple.Type.RAW) {
-					data[j++] = t; 
+					data1[j++] = t; 
 				}
 			}
 		}
-		LinearLayout layout = (LinearLayout) findViewById(R.id.tab_chart);
+		switch (chartmode) {
+		case 1: // Create periodogram
+			if(n < 512) { return; }
+			FFT transform = new FFT(512);
+			double x[] = new double[512];
+			double y[] = new double[512];
+			int j = n - 512;
+			for(int i=0; i < 512; ++i) { x[i] = data1[j++].getY(); }
+			transform.fft(x, y);
+			// gamma frequencies are 32Hz +, higher than this will probably not be needed
+			data2 = new GraphViewData[64]; 
+			double scale = 512 * 512; // no samples * frequency of data
+			for (int i=0; i < data2.length; ++i) { 
+				data2[i] = new GraphViewData(i, (x[i]*x[i] + y[i]*y[i])/scale); // |v|, v in C
+			}
+			data = data2;
+			break;
+		default: 
+			data = data1;
+		}
+	
 		if (graphView != null) {
 			graphViewSeries.resetData(data);
 		} else {
+			LinearLayout layout = (LinearLayout) findViewById(R.id.tab_chart);
 			graphView = new LineGraphView(this, "EEG Raw Data");
 			graphViewSeries = new GraphViewSeries(data);
 			graphView.addSeries(graphViewSeries);
@@ -191,6 +221,20 @@ public class MainActivity extends Activity {
 			graphView.setScrollable(true);
 			layout.addView(graphView);
 		}
+	}
+	public void onRadioButtonClicked(View view) {
+	    boolean checked = ((RadioButton) view).isChecked();	    
+	    switch(view.getId()) {
+	        case R.id.radio_freqspace:
+	        	if (checked)
+	        		chartmode = 1;
+	        	break;
+	        case R.id.radio_timespace:
+	        	if (checked)
+	        		chartmode = 0;
+	            break;
+	    }
+	    onClickUpdateChart(null);
 	}
 	public void onClickConnect(View view) {
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -271,7 +315,7 @@ public class MainActivity extends Activity {
 	public void onClickCue(View view) {
 		if (recording || simulating) {
     		synchronized(measures_lock) {
-    			measures.add(new Triple(System.currentTimeMillis(),Triple.Type.CUE,cue ++));
+    			measures.add(new Triple(System.currentTimeMillis(),Triple.Type.CUE,cuenr ++));
     		}
     	}
 	}
@@ -285,10 +329,11 @@ public class MainActivity extends Activity {
 	private final Thread simulator = new Thread(new Runnable() {
 		public void run() {
 			if(!simulating) { return; }
-			int freq=512;
+			int deltat=512; // actually 1/deltat
+			double freq = 3.5;
 			long ti = System.currentTimeMillis();
-			for(int i=0; i < freq; i = i + 1) {
-				double amp = Math.sin(((double)i)*2*Math.PI/((double)freq));
+			for(int i=0; i < deltat; i = i + 1) {
+				double amp = Math.sin(((double)i)*freq*2*Math.PI/((double)deltat));
 				measures.add(new Triple(ti+i,Triple.Type.RAW,(int)(100*amp)));
 			}
 		}
@@ -458,5 +503,4 @@ public class MainActivity extends Activity {
         }
         }
     };
-    
 }

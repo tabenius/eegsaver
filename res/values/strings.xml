@@ -19,5 +19,7 @@
     
     <string name="link_button">Link to Dropbox</string>
     <string name="tab_log">Log</string>
-    <string name="button_updatechart">Update Chart</string>
+    <string name="button_updatechart">Update</string>
+    <string name="radio_timespace">Time space</string>
+    <string name="radio_freqspace">Frequency Space</string>
 </resources>

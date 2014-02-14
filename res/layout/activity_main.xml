@@ -127,14 +127,47 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical" >
-					<Button
-            android:id="@+id/button_updatechart"
-            style="@style/AppBaseTheme"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:onClick="onClickUpdateChart"
-            android:text="@string/button_updatechart" />
+                <LinearLayout
+                    android:id="@+id/tab_chart_buttons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" >
+
+                    <Button
+                        android:id="@+id/button_updatechart"
+                        style="@style/AppBaseTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:onClick="onClickUpdateChart"
+                        android:text="@string/button_updatechart" />
+
+                    <RadioGroup
+                        android:id="@+id/tab_chart_radiobuttons"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" >
+
+                        <RadioButton
+                            android:id="@+id/radio_timespace"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0"
+                            android:checked="true"
+                            android:onClick="onRadioButtonClicked"
+                            android:text="@string/radio_timespace" />
+
+                        <RadioButton
+                            android:id="@+id/radio_freqspace"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0"
+                            android:onClick="onRadioButtonClicked"
+                            android:text="@string/radio_freqspace" />
+
+                    </RadioGroup>
+
+                </LinearLayout>									
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/tab_save"

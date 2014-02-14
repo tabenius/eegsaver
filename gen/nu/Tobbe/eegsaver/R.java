@@ -24,23 +24,27 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f090015;
+        public static final int action_settings=0x7f090019;
         public static final int button1=0x7f090000;
         public static final int button2=0x7f090001;
         public static final int button_cue=0x7f090005;
         public static final int button_disconnect=0x7f090002;
-        public static final int button_namefiledate=0x7f09000d;
-        public static final int button_save=0x7f09000f;
-        public static final int button_updatechart=0x7f09000b;
-        public static final int edit_filename=0x7f09000e;
-        public static final int layoutUL=0x7f090010;
-        public static final int link_button=0x7f090014;
-        public static final int progressBar=0x7f090012;
+        public static final int button_namefiledate=0x7f090011;
+        public static final int button_save=0x7f090013;
+        public static final int button_updatechart=0x7f09000c;
+        public static final int edit_filename=0x7f090012;
+        public static final int layoutUL=0x7f090014;
+        public static final int link_button=0x7f090018;
+        public static final int progressBar=0x7f090016;
+        public static final int radio_freqspace=0x7f09000f;
+        public static final int radio_timespace=0x7f09000e;
         public static final int tab_chart=0x7f09000a;
+        public static final int tab_chart_buttons=0x7f09000b;
+        public static final int tab_chart_radiobuttons=0x7f09000d;
         public static final int tab_log=0x7f090008;
-        public static final int tab_save=0x7f09000c;
-        public static final int test_output=0x7f090013;
-        public static final int textView1=0x7f090011;
+        public static final int tab_save=0x7f090010;
+        public static final int test_output=0x7f090017;
+        public static final int textView1=0x7f090015;
         public static final int textView2=0x7f090006;
         public static final int toggleSimulate=0x7f090003;
         public static final int toggle_record=0x7f090004;
@@ -68,6 +72,8 @@ public final class R {
         public static final int button_updatechart=0x7f060012;
         public static final int edit_message=0x7f060002;
         public static final int link_button=0x7f060010;
+        public static final int radio_freqspace=0x7f060014;
+        public static final int radio_timespace=0x7f060013;
         public static final int tab_log=0x7f060011;
         public static final int title_activity_main=0x7f06000d;
         public static final int title_activity_save=0x7f06000e;
