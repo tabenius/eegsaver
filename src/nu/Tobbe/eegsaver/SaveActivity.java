@@ -39,9 +39,9 @@ public class SaveActivity extends Activity {
     private DbxFileSystem fs;
     private String filenameout;
     private String filenamein;
-    private static enum DBX { EMPTY, INSTANCE, LINKED, FIRSTSYNC, PATHOK, ULSTART, COMPLETE, COMPLETE2 };
+    private static enum DBX { EMPTY, INSTANCE, LINKED, FIRSTSYNC, PATHOK, ULSTART, COMPLETE, COMPLETE2 }
     private DBX dbxstate = DBX.EMPTY;
-    private Object dbxlock;
+    private final Object dbxlock = new Object();
     Handler uihandler;
     private int pct;
     private String dbxerror;
@@ -55,8 +55,7 @@ public class SaveActivity extends Activity {
         mLog = (TextView) findViewById(R.id.test_output);
         mLinkButton = (Button) findViewById(R.id.link_button);
         pb = (ProgressBar) findViewById(R.id.progressBar);
-        dbxlock = new Object();
-        
+
         mLog.setVisibility(View.VISIBLE);
         mLinkButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -98,7 +97,7 @@ public class SaveActivity extends Activity {
     }
 
     private void onClickLinkToDropbox() {
-        mDbxAcctMgr.startLink((Activity)this, REQUEST_LINK_TO_DBX);
+        mDbxAcctMgr.startLink(this, REQUEST_LINK_TO_DBX);
     }
 
     @Override

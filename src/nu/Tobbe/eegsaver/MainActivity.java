@@ -20,10 +20,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
+import android.os.*;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.Time;
@@ -39,6 +36,7 @@ import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.widget.Switch;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
@@ -68,7 +66,7 @@ public class MainActivity extends Activity {
 	private int cuenr = 0;
     private static BufferedWriter out;
 	private static ArrayList<Triple> measures;
-	private static Object measures_lock;
+	private static final Object measures_lock = new Object();
 	
 	private static TextView log;
 	private static TextView view_data;
@@ -81,7 +79,6 @@ public class MainActivity extends Activity {
 	public MainActivity() {
 		super();
 		measures = new ArrayList<Triple>();
-		measures_lock = new Object();
 	}
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +90,7 @@ public class MainActivity extends Activity {
 		Time today = new Time(Time.getCurrentTimezone());
 		today.setToNow();
 		log.append(today.format2445()+"\n");
-		log.append("Android version: "+android.os.Build.VERSION.RELEASE+" "+android.os.Build.VERSION.CODENAME+", SDK level: "+android.os.Build.VERSION.SDK_INT+"\n");
+		log.append("Android version: "+ Build.VERSION.RELEASE+" "+ Build.VERSION.CODENAME+", SDK level: "+ Build.VERSION.SDK_INT+"\n");
 
     	rectog = (ToggleButton)findViewById(R.id.toggle_record);
 
@@ -118,7 +115,9 @@ public class MainActivity extends Activity {
 		mTabHost.addTab(tab_log);
 		mTabHost.addTab(tab_chart);
 		mTabHost.addTab(tab_save);
-		
+
+//        verbose = findViewById(android.R.id.myswitch).isSelected();
+
 	    initWriter();
 		scheduleTaskExecutor= Executors.newScheduledThreadPool(5);
 	    scheduleTaskExecutor.scheduleAtFixedRate(saver, 0, 1, TimeUnit.SECONDS);
@@ -167,6 +166,9 @@ public class MainActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
+    public void onClickVerbose(View view) {
+        verbose = view.isSelected();
+    }
 	public void onClickUpdateChart(View view) {
 		GraphViewData[] data;
 		Triple[] data1;
@@ -174,20 +176,20 @@ public class MainActivity extends Activity {
 		Triple first;
 		int n=0;
 		synchronized(measures_lock) {
-			int N = measures.size();
-			if (N==0) return;
+			if (measures.size()==0) return;
 			first = measures.get(0);
-			for (int i=0; i < N; ++i) {
-				if (measures.get(i).type == Triple.Type.RAW) { n ++; }
-			}
+            for (Triple measure : measures) {
+                if (measure.type == Triple.Type.RAW) {
+                    n++;
+                }
+            }
 			data1 = new Triple[n];
 			int j=0;
-			for (int i=0; i < N; ++i) {
-				Triple t = measures.get(i);
-				if (t.type == Triple.Type.RAW) {
-					data1[j++] = t; 
-				}
-			}
+            for (Triple t : measures) {
+                if (t.type == Triple.Type.RAW) {
+                    data1[j++] = t;
+                }
+            }
 		}
 		switch (chartmode) {
 		case 1: // Create periodogram
@@ -265,7 +267,7 @@ public class MainActivity extends Activity {
 		if (simulating) { onClickSimulate(null); }
 	}
 	public void onClickRecord(View view) {
-		recording = recording?false:true;
+		recording = !recording;
 		ToggleButton tog = (ToggleButton)findViewById(R.id.toggle_record);
 		if (!tog.equals(view)) {
 			tog.toggle();
@@ -320,7 +322,7 @@ public class MainActivity extends Activity {
     	}
 	}
 	public void onClickSimulate(View view) {
-		simulating = simulating?false:true;
+		simulating = !simulating;
 		ToggleButton tog = (ToggleButton)findViewById(R.id.toggleSimulate);
 		if (!tog.equals(view)) {
 			tog.toggle();
@@ -358,7 +360,7 @@ public class MainActivity extends Activity {
 			runOnUiThread(new Runnable() {
 				public void run() {
 					int span = 0;
-					int n = 0;
+					int n;
 					synchronized(measures_lock) {
 						n = measures.size();
 						if (n > 0) {
@@ -382,7 +384,7 @@ public class MainActivity extends Activity {
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
         @Override
         public void afterTextChanged(Editable s) {
-        	((Button)findViewById(R.id.button_save)).setEnabled(s.length() > 0);
+        	findViewById(R.id.button_save).setEnabled(s.length() > 0);
         }
     };
 	static private final Handler eeghandler = new Handler() {
@@ -413,7 +415,7 @@ public class MainActivity extends Activity {
 	                	tv.append("State: not paired\n");
 	                	break;
 	                case TGDevice.STATE_DISCONNECTED:
-	                	tv.append("State: Disconnected mang\n");
+	                	tv.append("State: Disconnected device\n");
 	                	rectog.setEnabled(false);
                 }
 
@@ -436,6 +438,7 @@ public class MainActivity extends Activity {
             	}
             	break;
             case TGDevice.MSG_EEG_POWER:
+                if (msg.obj == null) break;
             	TGEegPower ep = (TGEegPower)msg.obj;
             	if (recording) {
             		synchronized(measures_lock) {
@@ -495,8 +498,10 @@ public class MainActivity extends Activity {
             	tv.append("Low battery!\n");
             	break;
             case TGDevice.MSG_RAW_MULTI: // deprecated in all physical devices
-            	TGRawMulti rawM = (TGRawMulti)msg.obj;
-            	tv.append("Raw1: " + rawM.ch1 + "\nRaw2: " + rawM.ch2);
+                if (msg.obj != null) {
+            	    TGRawMulti rawM = (TGRawMulti)msg.obj;
+            	    tv.append("Raw1: " + rawM.ch1 + "\nRaw2: " + rawM.ch2);
+                }
             	break;
             default:
             	break;

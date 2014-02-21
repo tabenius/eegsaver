@@ -110,8 +110,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" >
 
-					<ScrollView
-					    android:id="@+id/tab_log"
+                <LinearLayout
+                        android:id="@+id/tab_log"
+                        android:orientation="vertical"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent">
+		                <Switch
+						                android:layout_width="wrap_content"
+						                android:layout_height="wrap_content"
+						                android:text="@string/switch_verbose"
+						                android:id="@+id/myswitch" android:onClick="onClickVerbose"/>
+                <ScrollView
+					    android:id="@+id/sv_log"
 					    android:layout_width="fill_parent"
 					    android:layout_height="fill_parent" >
 
@@ -121,7 +131,7 @@
                             android:layout_height="wrap_content"
                             android:text="TextView" />
                     </ScrollView>
-
+                </LinearLayout>
                 <LinearLayout
                     android:id="@+id/tab_chart"
                     android:layout_width="match_parent"

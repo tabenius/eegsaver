@@ -22,4 +22,5 @@
     <string name="button_updatechart">Update</string>
     <string name="radio_timespace">Time space</string>
     <string name="radio_freqspace">Frequency Space</string>
+    <string name="switch_verbose">Verbose</string>
 </resources>
